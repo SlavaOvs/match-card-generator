@@ -4,79 +4,101 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Генератор карточек матча</title>
+  <!-- Подключаем шрифт Oswald Medium -->
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500&display=swap" rel="stylesheet">
   <style>
-    body { font-family: sans-serif; max-width: 480px; margin: 0 auto; padding: 1rem; }
-    label, select, input, button { display: block; width: 100%; margin-bottom: 0.75rem; }
+    body { font-family: 'Oswald', sans-serif; max-width: 480px; margin: 0 auto; padding: 1rem; }
+    label, input, button { display: block; width: 100%; margin-bottom: 0.75rem; }
     canvas { display: block; margin: 1rem auto; border: 1px solid #ccc; }
     button { padding: 0.5rem; font-size: 1rem; }
-    a { display: block; text-align: center; margin-top: 1rem; }
   </style>
 </head>
 <body>
   <h1>Генератор карточек матча</h1>
 
-  <label for="homeTeam">Команда хозяев:</label>
-  <select id="homeTeam"></select>
+  <!-- Выбор команд с поиском -->
+  <label>Команда хозяев:
+    <input list="teamsList" id="homeTeam" placeholder="Начните вводить название...">
+  </label>
+  <label>Команда гостей:
+    <input list="teamsList" id="awayTeam" placeholder="Начните вводить название...">
+  </label>
+  <datalist id="teamsList">
+    <option value="Сиэтл Кракен"></option>
+    <option value="Эдмонтон Ойлерз"></option>
+    <!-- Добавьте другие команды здесь -->
+  </datalist>
 
-  <label for="awayTeam">Команда гостей:</label>
-  <select id="awayTeam"></select>
+  <!-- Выбор лиги с поиском -->
+  <label>Лига:
+    <input list="leaguesList" id="league" placeholder="Начните вводить название...">
+  </label>
+  <datalist id="leaguesList">
+    <option value="НХЛ"></option>
+    <option value="КХЛ"></option>
+    <option value="Чемпионат Беларуси"></option>
+    <option value="Чемпионат мира"></option>
+    <option value="МХЛ"></option>
+    <option value="ВХЛ"></option>
+  </datalist>
 
-  <label for="league">Лига:</label>
-  <select id="league">
-    <option value="Премьер-лига">Премьер‑лига</option>
-    <option value="Лига чемпионов">Лига чемпионов УЕФА</option>
-    <option value="Ла Лига">Ла Лига</option>
-    <option value="Серия A">Серия A</option>
-    <!-- Добавьте свои лиги -->
-  </select>
+  <!-- Дата и время -->
+  <label for="matchDate">Дата матча:</label>
+  <input type="date" id="matchDate">
+  <label for="matchTime">Время матча:</label>
+  <input type="time" id="matchTime">
 
-  <label for="matchTime">Дата и время матча:</label>
-  <input type="datetime-local" id="matchTime">
+  <!-- Дополнительные опции -->
+  <label><input type="checkbox" id="addLogoHp"> Добавить логотип Hockey Plus</label>
+  <label><input type="checkbox" id="showVS"> Показать "VS"</label>
 
   <button id="generate">Сгенерировать карточку</button>
-  <a id="downloadLink" style="display:none;">Скачать картинку</a>
+  <a id="downloadLink" style="display:none; text-align:center; margin-top:1rem;"></a>
 
-  <canvas id="preview" width="800" height="450"></canvas>
+  <!-- Холст 2000x2000 -->
+  <canvas id="preview" width="2000" height="2000"></canvas>
 
   <script>
-    // Список команд и локальные пути к логотипам в папке images/logos
+    // Список команд и пути к логотипам
     const teams = [
-      { name: 'Зенит',       logo: 'images/logos/zenit.png' },
-      { name: 'Спартак',     logo: 'images/logos/spartak.png' },
-      { name: 'Барселона',   logo: 'images/logos/barcelona.png' },
-      { name: 'Реал Мадрид', logo: 'images/logos/realmadrid.png' }
-      // Добавьте свои команды
+      { name: 'Сиэтл Кракен',     logo: 'images/Команды/Сиэтл.png' },
+      { name: 'Эдмонтон Ойлерз',  logo: 'images/Команды/Эдмонтон.png' }
+      // Добавьте другие команды аналогично
     ];
 
-    // Заполняем списки команд
-    function populateTeams() {
-      const home = document.getElementById('homeTeam');
-      const away = document.getElementById('awayTeam');
-      teams.forEach(team => {
-        home.add(new Option(team.name, team.name));
-        away.add(new Option(team.name, team.name));
-      });
-    }
+    // Список лиг, пути к логотипам и координаты
+    const leagues = [
+      { name: 'НХЛ', logo: 'images/Лиги/НХЛ.png',                    x: 118, y: 50 },
+      { name: 'КХЛ', logo: 'images/Лиги/КХЛ.png',                    x: 121, y: 50 },
+      { name: 'Чемпионат Беларуси', logo: 'images/Лиги/Чемпионат Беларуси.png', x: 60,  y: 50 },
+      { name: 'Чемпионат мира',     logo: 'images/Лиги/Чемпионат мира.png',     x: 83,  y: 50 },
+      { name: 'МХЛ', logo: 'images/Лиги/МХЛ.png',                    x: 114, y: 50 },
+      { name: 'ВХЛ', logo: 'images/Лиги/ВХЛ.png',                    x: 121, y: 50 }
+    ];
 
-    // Загрузка изображения по локальному пути
+    // Утилита для загрузки изображения
     function loadImage(url) {
-      return new Promise((resolve, reject) => {
+      return new Promise((res, rej) => {
         const img = new Image();
         img.crossOrigin = 'anonymous';
-        img.onload = () => resolve(img);
-        img.onerror = () => reject(new Error('Не удалось загрузить ' + url));
+        img.onload = () => res(img);
+        img.onerror = () => rej(new Error('Не удалось загрузить ' + url));
         img.src = url;
       });
     }
 
+    // Генерация карточки
     async function drawCard() {
-      const homeName = document.getElementById('homeTeam').value;
-      const awayName = document.getElementById('awayTeam').value;
-      const league   = document.getElementById('league').value;
-      const matchTime= document.getElementById('matchTime').value;
+      const homeName   = document.getElementById('homeTeam').value;
+      const awayName   = document.getElementById('awayTeam').value;
+      const leagueName = document.getElementById('league').value;
+      const dateValue  = document.getElementById('matchDate').value;
+      const timeValue  = document.getElementById('matchTime').value;
+      const addHpLogo  = document.getElementById('addLogoHp').checked;
+      const showVS     = document.getElementById('showVS').checked;
 
-      if (!matchTime) {
-        alert('Пожалуйста, выберите дату и время матча');
+      if (!homeName || !awayName || !leagueName || !dateValue || !timeValue) {
+        alert('Пожалуйста, заполните все поля.');
         return;
       }
 
@@ -84,38 +106,61 @@
       const ctx = canvas.getContext('2d');
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // 1) Фон из папки images
-      const bg = await loadImage('images/card-bg.png');
+      // 1) Фон
+      const bg = await loadImage('images/Фон/Фон.png');
       ctx.drawImage(bg, 0, 0, canvas.width, canvas.height);
 
       // 2) Логотипы команд
-      const homeLogoUrl = teams.find(t => t.name === homeName).logo;
-      const awayLogoUrl = teams.find(t => t.name === awayName).logo;
-      const homeLogo = await loadImage(homeLogoUrl);
-      const awayLogo = await loadImage(awayLogoUrl);
-      ctx.drawImage(homeLogo, 50, 175, 120, 120);
-      ctx.drawImage(awayLogo, canvas.width - 170, 175, 120, 120);
+      const homeLogo  = teams.find(t => t.name === homeName)?.logo;
+      const awayLogo  = teams.find(t => t.name === awayName)?.logo;
+      if (!homeLogo || !awayLogo) {
+        alert('Команда не найдена в списке.');
+        return;
+      }
+      const imgHome = await loadImage(homeLogo);
+      const imgAway = await loadImage(awayLogo);
+      ctx.drawImage(imgHome, 220, 500);
+      ctx.drawImage(imgAway, 1226, 500);
 
-      // 3) Тексты
-      ctx.fillStyle = '#fff';
+      // 3) Логотип лиги
+      const leagueObj = leagues.find(l => l.name === leagueName);
+      if (!leagueObj) {
+        alert('Лига не найдена.');
+        return;
+      }
+      const imgLeague = await loadImage(leagueObj.logo);
+      ctx.drawImage(imgLeague, leagueObj.x, leagueObj.y);
+
+      // 4) Логотип Hockey Plus
+      if (addHpLogo) {
+        const imgHP = await loadImage('images/Hockey Plus/Лого.png');
+        ctx.drawImage(imgHP, 850, 1850);
+      }
+
+      // 5) Текст VS
+      ctx.fillStyle = '#000';
+      ctx.textAlign = 'left';
+      if (showVS) {
+        ctx.font = '500 100px Oswald';
+        ctx.fillText('VS', 950, 950);
+      }
+
+      // 6) Дата (день и месяц)
+      const dt = new Date(dateValue);
+      const day = String(dt.getDate()).padStart(2, '0');
+      const months = ['ЯНВАРЯ','ФЕВРАЛЯ','МАРТА','АПРЕЛЯ','МАЯ','ИЮНЯ',
+                      'ИЮЛЯ','АВГУСТА','СЕНТЯБРЯ','ОКТЯБРЯ','НОЯБРЯ','ДЕКАБРЯ'];
+      const dateText = `${day} ${months[dt.getMonth()]}`;
+      ctx.font = '500 60px Oswald';
       ctx.textAlign = 'center';
+      ctx.fillText(dateText, canvas.width / 2, 523);
 
-      ctx.font = 'bold 36px sans-serif';
-      ctx.fillText(homeName, 110, 150);
-      ctx.fillText(awayName, canvas.width - 110, 150);
+      // 7) Время
+      const timeText = timeValue;
+      ctx.font = '500 116px Oswald';
+      ctx.fillText(timeText, canvas.width / 2, 595);
 
-      ctx.font = '24px sans-serif';
-      ctx.fillText(league, canvas.width / 2, 60);
-
-      // Форматируем дату и время
-      const dt = new Date(matchTime);
-      const formatted = dt.toLocaleString('ru-RU', {
-        day: '2-digit', month: '2-digit', year: 'numeric',
-        hour: '2-digit', minute: '2-digit'
-      });
-      ctx.fillText(formatted, canvas.width / 2, canvas.height - 40);
-
-      // 4) Ссылка для скачивания
+      // 8) Ссылка для скачивания
       const link = document.getElementById('downloadLink');
       link.style.display = 'block';
       link.href = canvas.toDataURL('image/png');
@@ -124,7 +169,6 @@
     }
 
     document.getElementById('generate').addEventListener('click', drawCard);
-    window.addEventListener('load', populateTeams);
   </script>
 </body>
 </html>
