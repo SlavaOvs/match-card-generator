@@ -188,12 +188,12 @@
       // дата
       const months=['ЯНВАРЯ','ФЕВРАЛЯ','МАРТА','АПРЕЛЯ','МАЯ','ИЮНЯ','ИЮЛЯ','АВГУСТА','СЕНТЯБРЯ','ОКТЯБРЯ','НОЯБРЯ','ДЕКАБРЯ'];
       const dateText = day.padStart(2,'0')+' '+months[monthIndex];
-      ctx.font='500 60px Oswald';
+      ctx.font='500 50px Oswald';
       ctx.textAlign='center';
-      ctx.fillText(dateText,canvas.width/2,523);
+      ctx.fillText(dateText,canvas.width/2,520);
       // время
-      ctx.font='500 116px Oswald';
-      ctx.fillText(time,canvas.width/2,595);
+      ctx.font='500 110px Oswald';
+      ctx.fillText(time,canvas.width/2,560);
       // загрузка
       const link=document.getElementById('downloadLink');
       link.style.display='block';link.href=canvas.toDataURL('image/png');
