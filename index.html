@@ -63,7 +63,7 @@
 <body>
   <h1>Генератор карточек матча</h1>
 
-  <!-- ====== Форма выбора ====== -->
+  <!-- Форма выбора -->
   <label>Команда хозяев:
     <input list="teamsList" id="homeTeam" placeholder="Начните вводить...">
   </label>
@@ -73,7 +73,7 @@
   <datalist id="teamsList">
     <option value="Сиэтл Кракен">
     <option value="Эдмонтон Ойлерз">
-    <!-- ...другие команды... -->
+    <!-- другие команды -->
   </datalist>
 
   <label>Лига:
@@ -122,11 +122,11 @@
   </div>
 
   <script>
-    // ==== Настройки ====
-    const logoCenterY = 900;       // Y-координата центра логотипов
-    const dateGapPx   = 40;        // отступ от нижней границы логотипа до даты
-    const lineHeight  = 60 * 1.2;   // межстрочный для даты
-    // ==================
+    // ===== Настройки =====
+    const logoCenterY = 900;         // центр логотипов по Y
+    const dateGapPx   = 40;          // отступ между логотипом и датой
+    const lineHeight  = 60 * 1.2;     // межстрочный для даты
+    // ======================
 
     const teams = [
       { name: 'Сиэтл Кракен',    logo: 'images/Команды/Сиэтл.png' },
@@ -146,7 +146,7 @@
         const img = new Image();
         img.crossOrigin = 'anonymous';
         img.onload = () => {
-          onProgress();
+          if (onProgress) onProgress();
           res(img);
         };
         img.onerror = () => rej(new Error('Не удалось загрузить ' + url));
@@ -155,8 +155,8 @@
     }
 
     async function drawCard() {
-      const progressEl = document.getElementById('progress');
-      progressEl.textContent = '';
+      const prog = document.getElementById('progress');
+      prog.textContent = '';
 
       await document.fonts.load('500 10px Oswald');
 
@@ -170,47 +170,52 @@
       const vs = document.getElementById('showVS').checked;
       if (!h||!a||!l||!d||m===''||!t) return alert('Заполните все поля');
 
-      const imagesToLoad = [
+      // Собираем URL для загрузки
+      const urls = [
         'images/Фон/Фон.png',
         teams.find(x=>x.name===h).logo,
         teams.find(x=>x.name===a).logo,
         leagues.find(x=>x.name===l).logo
       ];
-      if (hp) imagesToLoad.push('images/Hockey Plus/Лого.png');
+      if (hp) urls.push('images/Hockey Plus/Лого.png');
+      const total = urls.length;
       let loaded = 0;
-      const total = imagesToLoad.length;
-
-      // helper to update percent
-      const onProgress = () => {
+      const onProg = () => {
         loaded++;
-        const pct = Math.round((loaded/total)*100);
-        progressEl.textContent = `Готовность: ${pct}%`;
+        prog.textContent = `Готовность: ${Math.round(loaded/total*100)}%`;
       };
 
-      // Загружаем все изображения с прогрессом
-      const [bg, imgH, imgA, imgL, imgHP] = await Promise.all(imagesToLoad.map(url => loadImage(url, onProgress)));
+      // Загружаем
+      const imgs = await Promise.all(urls.map(u=>loadImage(u, onProg)));
+      const [bg, imgH, imgA, imgL, imgHP] = imgs;
 
       const canvas = document.getElementById('preview'),
             ctx    = canvas.getContext('2d');
       ctx.clearRect(0,0,canvas.width,canvas.height);
 
-      // фон
+      // 1) Фон
       ctx.drawImage(bg,0,0,canvas.width,canvas.height);
 
-      // логотипы команд
-      ctx.drawImage(imgH,  500  - imgH.width/2, logoCenterY - imgH.height/2);
-      ctx.drawImage(imgA, 1500  - imgA.width/2, logoCenterY - imgA.height/2);
+      // 2) Логотипы команд
+      ctx.drawImage(imgH,
+        500 - imgH.width/2,
+        logoCenterY - imgH.height/2
+      );
+      ctx.drawImage(imgA,
+        1500 - imgA.width/2,
+        logoCenterY - imgA.height/2
+      );
 
-      // лига
+      // 3) Лига
       const lig = leagues.find(x=>x.name===l);
       ctx.drawImage(imgL, lig.x, lig.y);
 
-      // HP
+      // 4) HP
       if (hp) {
         ctx.drawImage(imgHP, 850, 1850);
       }
 
-      // текст
+      // 5) Текст
       ctx.fillStyle    = '#fff';
       ctx.textAlign    = 'center';
       ctx.textBaseline = 'top';
@@ -222,24 +227,26 @@
         ctx.fillText('VS', 950, 950);
       }
 
-      // дата и время
-      const logoHeight = Math.max(imgH.height, imgA.height);
-      const dateY = logoCenterY + (logoHeight/2) + dateGapPx;
+      // 6) Дата и время: выравнены по центру, под логотипом
+      const logoH = Math.max(imgH.height, imgA.height);
+      const dateY = logoCenterY + logoH/2 + dateGapPx;
+
       const months = ['ЯНВАРЯ','ФЕВРАЛЯ','МАРТА','АПРЕЛЯ','МАЯ','ИЮНЯ',
                       'ИЮЛЯ','АВГУСТА','СЕНТЯБРЯ','ОКТЯБРЯ','НОЯБРЯ','ДЕКАБРЯ'];
       const dateText = String(d).padStart(2,'0') + ' ' + months[m];
+
       ctx.font = '500 60px Oswald';
       ctx.fillText(dateText, canvas.width/2, dateY);
 
       ctx.font = '500 116px Oswald';
       ctx.fillText(t, canvas.width/2, dateY + lineHeight + 1);
 
-      // показать «Скачать»
+      // Завершение
+      prog.textContent = '100% — готово!';
       const link = document.getElementById('downloadLink');
       link.href     = canvas.toDataURL('image/png');
       link.download = `${h}_vs_${a}.png`;
       link.style.display = 'block';
-      progressEl.textContent = '100% — готово!';
     }
 
     document.getElementById('generate')
