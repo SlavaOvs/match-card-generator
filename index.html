@@ -4,19 +4,54 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Генератор карточек матча</title>
-  <!-- Подключаем шрифт Oswald Medium -->
-  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500&display=swap" rel="stylesheet">
   <style>
-    body { font-family: 'Oswald', sans-serif; max-width: 480px; margin: 0 auto; padding: 1rem; }
-    label, input, button { display: block; width: 100%; margin-bottom: 0.75rem; }
-    canvas { display: block; margin: 1rem auto; border: 1px solid #ccc; }
-    button { padding: 0.5rem; font-size: 1rem; }
+    /* Подключаем локальный шрифт Oswald Medium */
+    @font-face {
+      font-family: 'Oswald';
+      font-style: normal;
+      font-weight: 500;
+      src: url('Oswald/static/Oswald-Medium.ttf') format('truetype');
+    }
+    body {
+      font-family: 'Oswald', sans-serif;
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 1rem;
+    }
+    label, input, button {
+      display: block;
+      width: 100%;
+      margin-bottom: 0.75rem;
+    }
+    .canvas-wrapper {
+      width: 100%;
+      max-width: 480px;
+      margin: 1rem auto;
+      overflow: hidden; /* Clip content */
+    }
+    canvas {
+      display: block;
+      width: 100%;  /* Масштабируем до ширины контейнера */
+      height: auto;
+      overflow: hidden;
+      border: 1px solid #ccc;
+      box-sizing: border-box;
+    }
+    button {
+      padding: 0.5rem;
+      font-size: 1rem;
+    }
+    a#downloadLink {
+      display: none;
+      text-align: center;
+      margin-top: 1rem;
+    }
   </style>
 </head>
 <body>
   <h1>Генератор карточек матча</h1>
 
-  <!-- Выбор команд с поиском -->
+  <!-- Команды с автодополнением -->
   <label>Команда хозяев:
     <input list="teamsList" id="homeTeam" placeholder="Начните вводить название...">
   </label>
@@ -24,22 +59,22 @@
     <input list="teamsList" id="awayTeam" placeholder="Начните вводить название...">
   </label>
   <datalist id="teamsList">
-    <option value="Сиэтл Кракен"></option>
-    <option value="Эдмонтон Ойлерз"></option>
+    <option value="Сиэтл Кракен">
+    <option value="Эдмонтон Ойлерз">
     <!-- Добавьте другие команды здесь -->
   </datalist>
 
-  <!-- Выбор лиги с поиском -->
+  <!-- Лиги с автодополнением -->
   <label>Лига:
     <input list="leaguesList" id="league" placeholder="Начните вводить название...">
   </label>
   <datalist id="leaguesList">
-    <option value="НХЛ"></option>
-    <option value="КХЛ"></option>
-    <option value="Чемпионат Беларуси"></option>
-    <option value="Чемпионат мира"></option>
-    <option value="МХЛ"></option>
-    <option value="ВХЛ"></option>
+    <option value="НХЛ">
+    <option value="КХЛ">
+    <option value="Чемпионат Беларуси">
+    <option value="Чемпионат мира">
+    <option value="МХЛ">
+    <option value="ВХЛ">
   </datalist>
 
   <!-- Дата и время -->
@@ -48,47 +83,46 @@
   <label for="matchTime">Время матча:</label>
   <input type="time" id="matchTime">
 
-  <!-- Дополнительные опции -->
+  <!-- Чекбоксы -->
   <label><input type="checkbox" id="addLogoHp"> Добавить логотип Hockey Plus</label>
   <label><input type="checkbox" id="showVS"> Показать "VS"</label>
 
   <button id="generate">Сгенерировать карточку</button>
-  <a id="downloadLink" style="display:none; text-align:center; margin-top:1rem;"></a>
+  <a id="downloadLink"></a>
 
-  <!-- Холст 2000x2000 -->
-  <canvas id="preview" width="2000" height="2000"></canvas>
+  <!-- Обёртка для clip content, сам canvas 2000×2000 -->
+  <div class="canvas-wrapper">
+    <canvas id="preview" width="2000" height="2000"></canvas>
+  </div>
 
   <script>
-    // Список команд и пути к логотипам
     const teams = [
-      { name: 'Сиэтл Кракен',     logo: 'images/Команды/Сиэтл.png' },
-      { name: 'Эдмонтон Ойлерз',  logo: 'images/Команды/Эдмонтон.png' }
-      // Добавьте другие команды аналогично
+      { name: 'Сиэтл Кракен',    logo: 'images/Команды/Сиэтл.png' },
+      { name: 'Эдмонтон Ойлерз', logo: 'images/Команды/Эдмонтон.png' }
     ];
-
-    // Список лиг, пути к логотипам и координаты
     const leagues = [
-      { name: 'НХЛ', logo: 'images/Лиги/НХЛ.png',                    x: 118, y: 50 },
-      { name: 'КХЛ', logo: 'images/Лиги/КХЛ.png',                    x: 121, y: 50 },
-      { name: 'Чемпионат Беларуси', logo: 'images/Лиги/Чемпионат Беларуси.png', x: 60,  y: 50 },
-      { name: 'Чемпионат мира',     logo: 'images/Лиги/Чемпионат мира.png',     x: 83,  y: 50 },
-      { name: 'МХЛ', logo: 'images/Лиги/МХЛ.png',                    x: 114, y: 50 },
-      { name: 'ВХЛ', logo: 'images/Лиги/ВХЛ.png',                    x: 121, y: 50 }
+      { name: 'НХЛ',                logo: 'images/Лиги/НХЛ.png',                    x: 118, y: 50 },
+      { name: 'КХЛ',                logo: 'images/Лиги/КХЛ.png',                    x: 121, y: 50 },
+      { name: 'Чемпионат Беларуси', logo: 'images/Лиги/Чемпионат Беларуси.png',     x: 60,  y: 50 },
+      { name: 'Чемпионат мира',     logo: 'images/Лиги/Чемпионат мира.png',         x: 83,  y: 50 },
+      { name: 'МХЛ',                logo: 'images/Лиги/МХЛ.png',                    x: 114, y: 50 },
+      { name: 'ВХЛ',                logo: 'images/Лиги/ВХЛ.png',                    x: 121, y: 50 }
     ];
 
-    // Утилита для загрузки изображения
     function loadImage(url) {
-      return new Promise((res, rej) => {
+      return new Promise((resolve, reject) => {
         const img = new Image();
         img.crossOrigin = 'anonymous';
-        img.onload = () => res(img);
-        img.onerror = () => rej(new Error('Не удалось загрузить ' + url));
+        img.onload = () => resolve(img);
+        img.onerror = () => reject(new Error('Не удалось загрузить ' + url));
         img.src = url;
       });
     }
 
-    // Генерация карточки
     async function drawCard() {
+      // Ждём, пока шрифт загрузится
+      await document.fonts.load('500 10px Oswald');
+
       const homeName   = document.getElementById('homeTeam').value;
       const awayName   = document.getElementById('awayTeam').value;
       const leagueName = document.getElementById('league').value;
@@ -111,54 +145,48 @@
       ctx.drawImage(bg, 0, 0, canvas.width, canvas.height);
 
       // 2) Логотипы команд
-      const homeLogo  = teams.find(t => t.name === homeName)?.logo;
-      const awayLogo  = teams.find(t => t.name === awayName)?.logo;
-      if (!homeLogo || !awayLogo) {
-        alert('Команда не найдена в списке.');
-        return;
-      }
-      const imgHome = await loadImage(homeLogo);
-      const imgAway = await loadImage(awayLogo);
+      const homeObj = teams.find(t => t.name === homeName);
+      const awayObj = teams.find(t => t.name === awayName);
+      if (!homeObj || !awayObj) { alert('Команда не найдена.'); return; }
+      const imgHome = await loadImage(homeObj.logo);
+      const imgAway = await loadImage(awayObj.logo);
       ctx.drawImage(imgHome, 220, 500);
       ctx.drawImage(imgAway, 1226, 500);
 
       // 3) Логотип лиги
       const leagueObj = leagues.find(l => l.name === leagueName);
-      if (!leagueObj) {
-        alert('Лига не найдена.');
-        return;
-      }
+      if (!leagueObj) { alert('Лига не найдена.'); return; }
       const imgLeague = await loadImage(leagueObj.logo);
       ctx.drawImage(imgLeague, leagueObj.x, leagueObj.y);
 
-      // 4) Логотип Hockey Plus
+      // 4) Лого Hockey Plus
       if (addHpLogo) {
         const imgHP = await loadImage('images/Hockey Plus/Лого.png');
         ctx.drawImage(imgHP, 850, 1850);
       }
 
       // 5) Текст VS
-      ctx.fillStyle = '#000';
-      ctx.textAlign = 'left';
       if (showVS) {
+        ctx.fillStyle = '#000';
         ctx.font = '500 100px Oswald';
+        ctx.textAlign = 'left';
         ctx.fillText('VS', 950, 950);
       }
 
-      // 6) Дата (день и месяц)
+      // 6) Дата
       const dt = new Date(dateValue);
       const day = String(dt.getDate()).padStart(2, '0');
       const months = ['ЯНВАРЯ','ФЕВРАЛЯ','МАРТА','АПРЕЛЯ','МАЯ','ИЮНЯ',
                       'ИЮЛЯ','АВГУСТА','СЕНТЯБРЯ','ОКТЯБРЯ','НОЯБРЯ','ДЕКАБРЯ'];
       const dateText = `${day} ${months[dt.getMonth()]}`;
+      ctx.fillStyle = '#000';
       ctx.font = '500 60px Oswald';
       ctx.textAlign = 'center';
       ctx.fillText(dateText, canvas.width / 2, 523);
 
       // 7) Время
-      const timeText = timeValue;
       ctx.font = '500 116px Oswald';
-      ctx.fillText(timeText, canvas.width / 2, 595);
+      ctx.fillText(timeValue, canvas.width / 2, 595);
 
       // 8) Ссылка для скачивания
       const link = document.getElementById('downloadLink');
