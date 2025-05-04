@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Генератор карточек матча</title>
+  <style>
+    body { font-family: sans-serif; max-width: 480px; margin: 0 auto; padding: 1rem; }
+    label, select, input, button { display: block; width: 100%; margin-bottom: 0.75rem; }
+    canvas { display: block; margin: 1rem auto; border: 1px solid #ccc; }
+    button { padding: 0.5rem; font-size: 1rem; }
+  </style>
+</head>
+<body>
+  <h1>Генератор карточек матча</h1>
+
+  <label for="homeTeam">Команда хозяев:</label>
+  <select id="homeTeam"></select>
+
+  <label for="awayTeam">Команда гостей:</label>
+  <select id="awayTeam"></select>
+
+  <label for="league">Лига:</label>
+  <select id="league">
+    <option value="Премьер-лига">Премьер‑лига</option>
+    <option value="Лига чемпионов">Лига чемпионов УЕФА</option>
+    <option value="Ла Лига">Ла Лига</option>
+    <option value="Серия A">Серия A</option>
+    <!-- Добавьте свои лиги -->
+  </select>
+
+  <label for="matchTime">Дата и время матча:</label>
+  <input type="datetime-local" id="matchTime">
+
+  <button id="generate">Сгенерировать карточку</button>
+  <a id="downloadLink" style="display:none; text-align:center;
+     margin-top:1rem;">Скачать картинку</a>
+
+  <canvas id="preview" width="800" height="450"></canvas>
+
+  <script>
+    // Пример JSON со списком команд и логотипов
+    const teams = [
+      { name: 'Зенит', logo: 'https://example.com/logos/zenit.png' },
+      { name: 'Спартак', logo: 'https://example.com/logos/spartak.png' },
+      { name: 'Барселона', logo: 'https://example.com/logos/barcelona.png' },
+      { name: 'Реал Мадрид', logo: 'https://example.com/logos/realmadrid.png' }
+      // Добавьте свои команды
+    ];
+
+    // Заполняем списки команд
+    function populateTeams() {
+      const home = document.getElementById('homeTeam');
+      const away = document.getElementById('awayTeam');
+      teams.forEach(team => {
+        const opt1 = new Option(team.name, team.name);
+        const opt2 = new Option(team.name, team.name);
+        home.add(opt1);
+        away.add(opt2);
+      });
+    }
+
+    // Утилита для загрузки изображения через Promise
+    function loadImage(url) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => resolve(img);
+        img.onerror = () => reject(new Error('Не удалось загрузить ' + url));
+        img.src = url;
+      });
+    }
+
+    // Основная функция рисования
+    async function drawCard() {
+      const homeName = document.getElementById('homeTeam').value;
+      const awayName = document.getElementById('awayTeam').value;
+      const league = document.getElementById('league').value;
+      const matchTime = document.getElementById('matchTime').value;
+      if (!matchTime) {
+        alert('Пожалуйста, выберите дату и время матча');
+        return;
+      }
+
+      const canvas = document.getElementById('preview');
+      const ctx = canvas.getContext('2d');
+
+      // Очистка холста
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // 1) Фон
+      const bg = await loadImage('https://example.com/card-bg.png');
+      ctx.drawImage(bg, 0, 0, canvas.width, canvas.height);
+
+      // 2) Логотипы
+      const homeLogoUrl = teams.find(t => t.name === homeName).logo;
+      const awayLogoUrl = teams.find(t => t.name === awayName).logo;
+      const homeLogo = await loadImage(homeLogoUrl);
+      const awayLogo = await loadImage(awayLogoUrl);
+      ctx.drawImage(homeLogo, 50, 175, 120, 120);
+      ctx.drawImage(awayLogo, canvas.width - 170, 175, 120, 120);
+
+      // 3) Тексты
+      ctx.fillStyle = '#fff';
+      ctx.textAlign = 'center';
+
+      ctx.font = 'bold 36px sans-serif';
+      ctx.fillText(homeName, 110, 150);
+      ctx.fillText(awayName, canvas.width - 110, 150);
+
+      ctx.font = '24px sans-serif';
+      ctx.fillText(league, canvas.width / 2, 60);
+
+      // Формат вывода даты
+      const dt = new Date(matchTime);
+      const formatted = dt.toLocaleString('ru-RU', {
+        day: '2-digit', month: '2-digit', year: 'numeric',
+        hour: '2-digit', minute: '2-digit'
+      });
+      ctx.fillText(formatted, canvas.width / 2, canvas.height - 40);
+
+      // 4) Ссылка для скачивания
+      const link = document.getElementById('downloadLink');
+      link.style.display = 'block';
+      link.href = canvas.toDataURL('image/png');
+      link.download = `${homeName}_vs_${awayName}.png`;
+      link.textContent = 'Скачать PNG';
+    }
+
+    document.getElementById('generate').addEventListener('click', drawCard);
+    window.addEventListener('load', populateTeams);
+  </script>
+</body>
+</html>
