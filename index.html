@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Генератор карточек матча</title>
   <style>
-    /* OswaldFont */
+    /* Oswald Font */
     @font-face {
       font-family: 'Oswald';
       font-style: normal;
@@ -113,11 +113,11 @@
   </div>
 
   <script>
-    // ==== Параметры, которые можно править ====
-    const logoCenterY = 900;     // новая высота центра логотипов
-    const dateGapPx   = 60;      // отступ от центра логотипа до даты
-    const lineHeight  = 60 * 1.2; // межстрочный для даты
-    // ========================================
+    // ==== Настройки ====
+    const logoCenterY = 900;       // Y-координата центра логотипов
+    const dateGapPx   = 40;        // отступ от нижней границы логотипа до даты
+    const lineHeight  = 60 * 1.2;   // межстрочный для даты
+    // ==================
 
     const teams = [
       { name: 'Сиэтл Кракен',    logo: 'images/Команды/Сиэтл.png' },
@@ -144,15 +144,15 @@
 
     async function drawCard() {
       await document.fonts.load('500 10px Oswald');
-      // сбор значений
-      const h = document.getElementById('homeTeam').value;
-      const a = document.getElementById('awayTeam').value;
-      const l = document.getElementById('league').value;
-      const d = document.getElementById('matchDay').value;
-      const m = document.getElementById('matchMonth').value;
-      const t = document.getElementById('matchTime').value;
-      const hp= document.getElementById('addLogoHp').checked;
-      const vs= document.getElementById('showVS').checked;
+
+      const h  = document.getElementById('homeTeam').value;
+      const a  = document.getElementById('awayTeam').value;
+      const l  = document.getElementById('league').value;
+      const d  = document.getElementById('matchDay').value;
+      const m  = document.getElementById('matchMonth').value;
+      const t  = document.getElementById('matchTime').value;
+      const hp = document.getElementById('addLogoHp').checked;
+      const vs = document.getElementById('showVS').checked;
       if (!h||!a||!l||!d||m===''||!t) return alert('Заполните все поля');
 
       const canvas = document.getElementById('preview'),
@@ -166,49 +166,51 @@
       // логотипы команд
       const imgH = await loadImage(teams.find(x=>x.name===h).logo);
       const imgA = await loadImage(teams.find(x=>x.name===a).logo);
-      ctx.drawImage(imgH,  500 - imgH.width/2, logoCenterY - imgH.height/2);
-      ctx.drawImage(imgA, 1500 - imgA.width/2, logoCenterY - imgA.height/2);
+      ctx.drawImage(imgH,  500  - imgH.width/2, logoCenterY - imgH.height/2);
+      ctx.drawImage(imgA, 1500  - imgA.width/2, logoCenterY - imgA.height/2);
 
       // лига
-      const lig = leagues.find(x=>x.name===l);
-      const imgL = await loadImage(lig.logo);
+      const lig = leagues.find(x=>x.name===l),
+            imgL = await loadImage(lig.logo);
       ctx.drawImage(imgL, lig.x, lig.y);
 
-      // Hockey Plus
+      // HP
       if (hp) {
         const imgHP = await loadImage('images/Hockey Plus/Лого.png');
         ctx.drawImage(imgHP, 850, 1850);
       }
 
       // текст
-      ctx.fillStyle = '#fff';
-      ctx.textAlign = 'center';
+      ctx.fillStyle    = '#fff';
+      ctx.textAlign    = 'center';
       ctx.textBaseline = 'top';
 
       // VS
       if (vs) {
-        ctx.font = '500 100px Oswald';
+        ctx.font      = '500 100px Oswald';
         ctx.textAlign = 'left';
         ctx.fillText('VS', 950, 950);
       }
+
+      // вычисляем Y для даты и времени
+      const logoHeight = Math.max(imgH.height, imgA.height);
+      const dateY = logoCenterY + (logoHeight/2) + dateGapPx;
 
       // дата
       const months = ['ЯНВАРЯ','ФЕВРАЛЯ','МАРТА','АПРЕЛЯ','МАЯ','ИЮНЯ',
                       'ИЮЛЯ','АВГУСТА','СЕНТЯБРЯ','ОКТЯБРЯ','НОЯБРЯ','ДЕКАБРЯ'];
       const dateText = String(d).padStart(2,'0') + ' ' + months[m];
-      const dateY    = logoCenterY + dateGapPx;
       ctx.font = '500 60px Oswald';
       ctx.fillText(dateText, canvas.width/2, dateY);
 
-      // время: на 1px ниже даты
-      const timeY = dateY + lineHeight + 1;
+      // время
       ctx.font = '500 116px Oswald';
-      ctx.fillText(t, canvas.width/2, timeY);
+      ctx.fillText(t, canvas.width/2, dateY + lineHeight + 1);
 
       // скачать
       const link = document.getElementById('downloadLink');
-      link.href    = canvas.toDataURL('image/png');
-      link.download= `${h}_vs_${a}.png`;
+      link.href     = canvas.toDataURL('image/png');
+      link.download = `${h}_vs_${a}.png`;
       link.style.display = 'block';
     }
 
