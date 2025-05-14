@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Генератор карточек матча</title>
   <style>
     /* Oswald Font */
@@ -12,28 +12,43 @@
       font-weight: 500;
       src: url('Oswald/static/Oswald-Medium.ttf') format('truetype');
     }
-    body { font-family: 'Oswald', sans-serif; max-width: 480px; margin: 0 auto; padding: 1rem; }
-    label, input, select, button { display: block; width: 100%; margin-bottom: .75rem; }
+    body {
+      font-family: 'Oswald', sans-serif;
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 1rem;
+    }
+    label, input, select, button {
+      display: block;
+      width: 100%;
+      margin-bottom: .75rem;
+    }
     .date-inputs { display: flex; gap: .5rem; }
     .date-inputs input, .date-inputs select { flex: 1; }
-    .canvas-wrapper { width:100%; max-width:480px; margin:1rem auto; overflow:hidden; }
-    canvas { display:block; width:100%; height:auto; border:1px solid #ccc; box-sizing:border-box; }
-    button { padding:.5rem; font-size:1rem; }
-    #progress { text-align:center; margin-top:.5rem; font-weight:bold; }
-    a#downloadLink { display:none; text-align:center; margin-top:1rem; }
-    /* Awesomplete skin */
-    .awesomplete { position:relative; display:inline-block; }
-    .awesomplete > ul {
-      position:absolute; left:0; top:100%; right:0;
-      margin:.2em 0 0; padding:0; list-style:none;
-      background:#fff; border:1px solid #ccc;
-      box-shadow:0 4px 8px rgba(0,0,0,.1);
-      max-height:200px; overflow-y:auto;
+    .canvas-wrapper {
+      width: 100%; max-width: 480px; margin: 1rem auto;
+      overflow: hidden;
     }
-    .awesomplete li { padding:.4em .6em; cursor:pointer; }
-    .awesomplete li[aria-selected="true"], .awesomplete li:hover { background:#eee; }
+    canvas {
+      display: block; width: 100%; height: auto;
+      border: 1px solid #ccc; box-sizing: border-box;
+    }
+    button { padding: .5rem; font-size: 1rem; }
+    #progress { text-align: center; margin-top: .5rem; font-weight: bold; }
+    a#downloadLink { display: none; text-align: center; margin-top: 1rem; }
+    /* Awesomplete skin */
+    .awesomplete { position: relative; display: inline-block; }
+    .awesomplete > ul {
+      position: absolute; left: 0; top: 100%; right: 0;
+      margin: .2em 0 0; padding: 0; list-style: none;
+      background: #fff; border: 1px solid #ccc;
+      box-shadow: 0 4px 8px rgba(0,0,0,.1);
+      max-height: 200px; overflow-y: auto;
+    }
+    .awesomplete li { padding: .4em .6em; cursor: pointer; }
+    .awesomplete li[aria-selected="true"], .awesomplete li:hover { background: #eee; }
   </style>
-  <!-- Awesomplete -->
+  <!-- Awesomplete (CDN) -->
   <link rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/awesomplete/1.1.5/awesomplete.min.css" />
   <script defer
@@ -86,13 +101,13 @@
   </div>
 
   <script>
-    // ==== Позиции ====
-    const logoCenterY = 900,
-          dateGapPx   = 20,
-          lineHeight  = 60 * 1.2;
-    // ===============
+    // ==== Настройки позиций ====
+    const logoCenterY = 900;       // Y-центр командных логотипов
+    const dateGapPx   = 200;       // отступ от низа логотипа лиги до даты
+    const lineHeight  = 60 * 1.2;   // межстрочный для даты
+    // ==============================
 
-    // Явно перечисляем команды с реальными путями к файлам:
+    // Команды с путями к логотипам
     const teams = [
       { name:'Сиэтл Кракен',       logo:'images/Команды/Сиэтл Кракен.png' },
       { name:'Эдмонтон Ойлерз',    logo:'images/Команды/Эдмонтон Ойлерз.png' },
@@ -106,18 +121,19 @@
       { name:'Даллас Старз',       logo:'images/Команды/Даллас Старз.png' }
     ];
 
+    // Лиги с путями
     const leagues = [
-      { name:'НХЛ',                logo:'images/Лиги/НХЛ.png',                    x:118, y:50 },
-      { name:'КХЛ',                logo:'images/Лиги/КХЛ.png',                    x:121, y:50 },
-      { name:'Чемпионат Беларуси', logo:'images/Лиги/ЧемпионатБеларуси.png',      x:60,  y:50 },
-      { name:'Чемпионат мира',     logo:'images/Лиги/Чемпионатмира.png',          x:83,  y:50 },
-      { name:'МХЛ',                logo:'images/Лиги/МХЛ.png',                    x:114, y:50 },
-      { name:'ВХЛ',                logo:'images/Лиги/ВХЛ.png',                    x:121, y:50 }
+      { name:'НХЛ',                logo:'images/Лиги/НХЛ.png',               x:118, y:50 },
+      { name:'КХЛ',                logo:'images/Лиги/КХЛ.png',               x:121, y:50 },
+      { name:'Чемпионат Беларуси', logo:'images/Лиги/ЧемпионатБеларуси.png', x:60,  y:50 },
+      { name:'Чемпионат мира',     logo:'images/Лиги/Чемпионатмира.png',     x:83,  y:50 },
+      { name:'МХЛ',                logo:'images/Лиги/МХЛ.png',               x:114, y:50 },
+      { name:'ВХЛ',                logo:'images/Лиги/ВХЛ.png',               x:121, y:50 }
     ];
 
-    // Инициализируем Awesomplete с minChars=0 и авто-показом всего списка
+    // Инициализация Awesomplete
     document.addEventListener('DOMContentLoaded', ()=> {
-      ['homeTeam','awayTeam'].forEach(id => {
+      ['homeTeam','awayTeam'].forEach(id=>{
         const inp = document.getElementById(id);
         const aw = new Awesomplete(inp, {
           list: teams.map(t=>t.name),
@@ -135,17 +151,19 @@
       inpL.addEventListener('focus', ()=> awL.evaluate());
     });
 
+    // Загрузка картинки с прогрессом
     function loadImage(url, onProg) {
-      return new Promise((res,rej)=>{
-        const img=new Image();
+      return new Promise((res, rej) => {
+        const img = new Image();
         img.crossOrigin = 'anonymous';
-        img.onload  = ()=>{ onProg && onProg(); res(img); };
-        img.onerror = ()=> rej(url);
+        img.onload = () => { onProg && onProg(); res(img); };
+        img.onerror = () => rej(url);
         img.src = url;
       });
     }
 
-    async function drawCard(){
+    // Основная функция рисования
+    async function drawCard() {
       const prog = document.getElementById('progress');
       prog.textContent = '';
 
@@ -159,7 +177,10 @@
       const t  = document.getElementById('matchTime').value;
       const hp = document.getElementById('addLogoHp').checked;
       const vs = document.getElementById('showVS').checked;
-      if(!h||!a||!l||!d||m===''||!t){ alert('Заполните все поля'); return; }
+      if(!h||!a||!l||!d||m===''||!t){
+        alert('Заполните все поля');
+        return;
+      }
 
       const selH = teams.find(x=>x.name===h),
             selA = teams.find(x=>x.name===a),
@@ -179,51 +200,56 @@
         prog.textContent = `${(loaded/total*100).toFixed(1)}%`;
       };
 
-      const [bg,imgH,imgA,imgL,imgHP] = await Promise.all(
+      const [bg, imgH, imgA, imgL, imgHP] = await Promise.all(
         urls.map(u=>loadImage(u, onProg))
       );
 
-      const c = document.getElementById('preview'),
-            ctx = c.getContext('2d');
-      ctx.clearRect(0,0,c.width,c.height);
+      const canvas = document.getElementById('preview'),
+            ctx    = canvas.getContext('2d');
+      ctx.clearRect(0,0,canvas.width,canvas.height);
 
-      // фон, логотипы, лига, HP
-      ctx.drawImage(bg,0,0,c.width,c.height);
-      ctx.drawImage(imgH,  500-imgH.width/2, logoCenterY-imgH.height/2);
-      ctx.drawImage(imgA, 1500-imgA.width/2, logoCenterY-imgA.height/2);
+      // фон
+      ctx.drawImage(bg,0,0,canvas.width,canvas.height);
+      // команды
+      ctx.drawImage(imgH,  500  - imgH.width/2, logoCenterY - imgH.height/2);
+      ctx.drawImage(imgA, 1500 - imgA.width/2, logoCenterY - imgA.height/2);
+      // лига
       ctx.drawImage(imgL, selL.x, selL.y);
+      // Hockey Plus
       if(hp) ctx.drawImage(imgHP,850,1850);
 
       // текст
-      ctx.fillStyle = '#fff';
-      ctx.textAlign = 'center';
+      ctx.fillStyle    = '#fff';
+      ctx.textAlign    = 'center';
       ctx.textBaseline = 'top';
       if(vs){
-        ctx.font='500 100px Oswald';
-        ctx.textAlign='left';
-        ctx.fillText('VS',950,950);
+        ctx.font = '500 100px Oswald';
+        ctx.textAlign = 'left';
+        ctx.fillText('VS', 950, 950);
       }
 
-      // дата и время сразу под лигой
-      const botL = selL.y + imgL.height;
-      const dateY = botL + dateGapPx;
+      // Дата и время под лигой
+      const leagueBottom = selL.y + imgL.height;
+      const dateY = leagueBottom + dateGapPx;
+
       const months = ['ЯНВАРЯ','ФЕВРАЛЯ','МАРТА','АПРЕЛЯ','МАЯ','ИЮНЯ',
                       'ИЮЛЯ','АВГУСТА','СЕНТЯБРЯ','ОКТЯБРЯ','НОЯБРЯ','ДЕКАБРЯ'];
-      const dateText = String(d).padStart(2,'0')+' '+months[m];
-      ctx.font='500 60px Oswald';
-      ctx.fillText(dateText, c.width/2, dateY);
-      ctx.font='500 116px Oswald';
-      ctx.fillText(t,       c.width/2, dateY+lineHeight+1);
+      const dateText = String(d).padStart(2,'0') + ' ' + months[m];
+
+      ctx.font = '500 60px Oswald';
+      ctx.fillText(dateText, canvas.width/2, dateY);
+
+      ctx.font = '500 116px Oswald';
+      ctx.fillText(t, canvas.width/2, dateY + lineHeight + 1);
 
       prog.textContent = '100.0% — готово!';
       const link = document.getElementById('downloadLink');
-      link.href     = c.toDataURL();
+      link.href     = canvas.toDataURL('image/png');
       link.download = `${h}_vs_${a}.png`;
       link.style.display = 'block';
     }
 
-    document.getElementById('generate')
-            .addEventListener('click', drawCard);
+    document.getElementById('generate').addEventListener('click', drawCard);
   </script>
 </body>
 </html>
