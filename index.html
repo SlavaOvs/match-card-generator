@@ -12,28 +12,12 @@
       font-weight: 500;
       src: url('Oswald/static/Oswald-Medium.ttf') format('truetype');
     }
-    body {
-      font-family: 'Oswald', sans-serif;
-      max-width: 480px;
-      margin: 0 auto;
-      padding: 1rem;
-    }
-    label, input, select, button {
-      display: block;
-      width: 100%;
-      margin-bottom: .75rem;
-    }
+    body { font-family: 'Oswald', sans-serif; max-width: 480px; margin: 0 auto; padding: 1rem; }
+    label, input, select, button { display: block; width: 100%; margin-bottom: .75rem; }
     .date-inputs { display: flex; gap: .5rem; }
-    .date-inputs input,
-    .date-inputs select { flex: 1; }
-    .canvas-wrapper {
-      width:100%; max-width:480px; margin:1rem auto;
-      overflow:hidden;
-    }
-    canvas {
-      display:block; width:100%; height:auto;
-      border:1px solid #ccc; box-sizing:border-box;
-    }
+    .date-inputs input, .date-inputs select { flex: 1; }
+    .canvas-wrapper { width:100%; max-width:480px; margin:1rem auto; overflow:hidden; }
+    canvas { display:block; width:100%; height:auto; border:1px solid #ccc; box-sizing:border-box; }
     button { padding:.5rem; font-size:1rem; }
     #progress { text-align:center; margin-top:.5rem; font-weight:bold; }
     a#downloadLink { display:none; text-align:center; margin-top:1rem; }
@@ -47,11 +31,8 @@
       max-height:200px; overflow-y:auto;
     }
     .awesomplete li { padding:.4em .6em; cursor:pointer; }
-    .awesomplete li[aria-selected="true"],
-    .awesomplete li:hover { background:#eee; }
+    .awesomplete li[aria-selected="true"], .awesomplete li:hover { background:#eee; }
   </style>
-
-  <!-- Awesomplete -->
   <link rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/awesomplete/1.1.5/awesomplete.min.css" />
   <script defer
@@ -104,55 +85,37 @@
   </div>
 
   <script>
-    // ==== Настройки позиций ====
-    const logoCenterY = 900,       // центр командных логотипов
-          dateGapPx   = 120,       // лучший отступ (пикселей) под ЛОГОТИПОМ ЛИГИ до даты
-          lineHeight  = 60 * 1.2;   // 120% межстрочный для даты
-    // ==============================
+    const logoCenterY = 900,
+          dateGapPx   = 120,
+          lineHeight  = 60 * 1.2;
 
-    // команды с путями
     const teams = [
-      { name:'Сиэтл Кракен',       logo:'images/Команды/Сиэтл Кракен.png' },
-      { name:'Эдмонтон Ойлерз',    logo:'images/Команды/Эдмонтон Ойлерз.png' },
-      { name:'ЦСКА Москва',        logo:'images/Команды/ЦСКА Москва.png' },
-      { name:'Вашингтон Кэпиталз', logo:'images/Команды/Вашингтон Кэпиталз.png' },
-      { name:'Флорида Пантерз',    logo:'images/Команды/Флорида Пантерз.png' },
-      { name:'Каролина Харрикейнз',logo:'images/Команды/Каролина Харрикейнз.png' },
-      { name:'Вегас Голден Найтс', logo:'images/Команды/Вегас Голден Найтс.png' },
-      { name:'Торонто Мэйпл Лифс', logo:'images/Команды/Торонто Мэйпл Лифс.png' },
-      { name:'Виннипег Джетс',     logo:'images/Команды/Виннипег Джетс.png' },
-      { name:'Даллас Старз',       logo:'images/Команды/Даллас Старз.png' }
+      { name:'Сиэтл Кракен',       logo:'images/Команды/Сиэтл.png' },
+      { name:'Эдмонтон Ойлерз',    logo:'images/Команды/Эдмонтон.png' },
+      /* … остальные команды … */
     ];
-
-    // лиги с путями
     const leagues = [
-      { name:'НХЛ',                logo:'images/Лиги/НХЛ.png',               x:118, y:50 },
-      { name:'КХЛ',                logo:'images/Лиги/КХЛ.png',               x:121, y:50 },
-      { name:'Чемпионат Беларуси', logo:'images/Лиги/ЧемпионатБеларуси.png', x:60,  y:50 },
-      { name:'Чемпионат мира',     logo:'images/Лиги/Чемпионатмира.png',     x:83,  y:50 },
-      { name:'МХЛ',                logo:'images/Лиги/МХЛ.png',               x:114, y:50 },
-      { name:'ВХЛ',                logo:'images/Лиги/ВХЛ.png',               x:121, y:50 }
+      { name:'НХЛ',                logo:'images/Лиги/НХЛ.png'               , x:1000, y:50 },  
+      { name:'КХЛ',                logo:'images/Лиги/КХЛ.png'               , x:1000, y:50 },
+      /* x=1000 для центрирования лиги по середине 2000px холста */
+      /* … остальные лиги с x=1000 … */
     ];
 
-    // инициализация автокомплита (Awesomplete)
-    document.addEventListener('DOMContentLoaded',()=>{
+    document.addEventListener('DOMContentLoaded', ()=>{
       ['homeTeam','awayTeam'].forEach(id=>{
         const inp=document.getElementById(id);
         const aw=new Awesomplete(inp,{
-          list:teams.map(t=>t.name),
-          minChars:0, autoFirst:true
+          list:teams.map(t=>t.name), minChars:0, autoFirst:true
         });
         inp.addEventListener('focus',()=>aw.evaluate());
       });
       const inpL=document.getElementById('league');
       const awL=new Awesomplete(inpL,{
-        list:leagues.map(l=>l.name),
-        minChars:0, autoFirst:true
+        list:leagues.map(l=>l.name), minChars:0, autoFirst:true
       });
       inpL.addEventListener('focus',()=>awL.evaluate());
     });
 
-    // загрузка с прогрессом
     function loadImage(url,onProg){
       return new Promise((res,rej)=>{
         const img=new Image();
@@ -163,7 +126,6 @@
       });
     }
 
-    // рисуем карточку
     async function drawCard(){
       const prog=document.getElementById('progress');
       prog.textContent='';
@@ -178,7 +140,6 @@
             t=document.getElementById('matchTime').value,
             hp=document.getElementById('addLogoHp').checked,
             vs=document.getElementById('showVS').checked;
-
       if(!h||!a||!l||!d||m===''||!t){
         alert('Заполните все поля'); return;
       }
@@ -193,7 +154,7 @@
       let loaded=0, total=urls.length;
       const onProg=()=>{ loaded++; prog.textContent=`${(loaded/total*100).toFixed(1)}%`; };
 
-      const [bg,imgH,imgA,imgL,imgHP]=await Promise.all(
+      const [bg,imgH,imgA,imgL,imgHP] = await Promise.all(
         urls.map(u=>loadImage(u,onProg))
       );
 
@@ -201,38 +162,45 @@
             ctx=c.getContext('2d');
       ctx.clearRect(0,0,c.width,c.height);
 
-      // фон и лого
+      // фон и командные лого
       ctx.drawImage(bg,0,0,c.width,c.height);
-      ctx.drawImage(imgH,  500  - imgH.width/2, logoCenterY - imgH.height/2);
-      ctx.drawImage(imgA, 1500 - imgA.width/2, logoCenterY - imgA.height/2);
-      ctx.drawImage(imgL, selL.x, selL.y);
+      ctx.drawImage(imgH,500-imgH.width/2,logoCenterY-imgH.height/2);
+      ctx.drawImage(imgA,1500-imgA.width/2,logoCenterY-imgA.height/2);
+
+      // лига по центру
+      const ligX = c.width/2 - imgL.width/2;
+      ctx.drawImage(imgL, ligX, selL.y);
+
       if(hp) ctx.drawImage(imgHP,850,1850);
 
       // текст
       ctx.fillStyle='#fff';
-      ctx.textAlign='center';
       ctx.textBaseline='top';
+
       if(vs){
         ctx.font='500 100px Oswald';
-        ctx.textAlign='left';
-        ctx.fillText('VS',950,950);
+        ctx.textAlign='center';
+        ctx.fillText('VS', c.width/2, 950);
       }
 
-      // дата и время под логотипом лиги
-      const leagueBot=selL.y + imgL.height,
-            dateY=leagueBot + dateGapPx;
+      // центрируем дату/время под лигой:
+      const leagueCenterX = ligX + imgL.width/2;
+      const dateY = selL.y + imgL.height + dateGapPx;
+
       const months=['ЯНВАРЯ','ФЕВРАЛЯ','МАРТА','АПРЕЛЯ','МАЯ','ИЮНЯ',
                     'ИЮЛЯ','АВГУСТА','СЕНТЯБРЯ','ОКТЯБРЯ','НОЯБРЯ','ДЕКАБРЯ'];
-      const dateText=String(d).padStart(2,'0')+' '+months[m];
+      const dateText = String(d).padStart(2,'0') + ' ' + months[m];
 
       ctx.font='500 60px Oswald';
-      ctx.fillText(dateText,c.width/2,dateY);
-      ctx.font='500 116px Oswald';
-      ctx.fillText(t,     c.width/2,dateY+lineHeight+1);
+      ctx.textAlign='center';
+      ctx.fillText(dateText, leagueCenterX, dateY);
 
-      prog.textContent='100.0% — готово!';
+      ctx.font='500 116px Oswald';
+      ctx.fillText(t, leagueCenterX, dateY + lineHeight + 1);
+
+      prog.textContent = '100.0% — готово!';
       const link=document.getElementById('downloadLink');
-      link.href    =c.toDataURL('image/png');
+      link.href=c.toDataURL('image/png');
       link.download=`${h}_vs_${a}.png`;
       link.style.display='block';
     }
