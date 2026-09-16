@@ -69,7 +69,7 @@
       background: var(--surface);
       box-shadow: var(--shadow);
     }
-    .form-panel { padding: 20px; }
+    .form-panel { overflow: visible; padding: 20px; }
 
     fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
     fieldset + fieldset { margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--line); }
@@ -77,6 +77,39 @@
     .field-grid { display: grid; gap: 14px; }
     .field { display: grid; gap: 7px; min-width: 0; }
     .field-label { font-size: 0.92rem; color: #35455c; }
+
+    .autocomplete { position: relative; min-width: 0; }
+    .autocomplete-dropdown {
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0;
+      z-index: 1000;
+      width: 100%;
+      max-width: 100%;
+      max-height: 300px;
+      overflow-x: hidden;
+      overflow-y: auto;
+      padding: 6px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      background: #fff;
+      box-shadow: 0 14px 34px rgba(24, 43, 72, .16);
+      overscroll-behavior: contain;
+      -webkit-overflow-scrolling: touch;
+    }
+    .autocomplete-dropdown[hidden] { display: none; }
+    .autocomplete-option, .autocomplete-empty {
+      min-height: 44px;
+      padding: 11px 12px;
+      border-radius: 8px;
+      line-height: 1.35;
+    }
+    .autocomplete-option { cursor: pointer; touch-action: manipulation; }
+    .autocomplete-option:hover, .autocomplete-option.is-active {
+      background: #eaf2ff;
+      color: var(--primary);
+    }
+    .autocomplete-empty { color: var(--muted); font-family: Arial, sans-serif; font-size: .9rem; }
 
     input:not([type='checkbox']), select {
       width: 100%;
@@ -221,86 +254,19 @@
         <fieldset>
           <legend>Команды</legend>
           <div class="field-grid two-columns">
-            <label class="field" for="homeTeam">
-              <span class="field-label">Команда хозяев</span>
-              <input list="teamsList" id="homeTeam" placeholder="Начните вводить..." autocomplete="off" required>
-            </label>
-            <label class="field" for="awayTeam">
-              <span class="field-label">Команда гостей</span>
-              <input list="teamsList" id="awayTeam" placeholder="Начните вводить..." autocomplete="off" required>
-            </label>
+            <div class="field">
+              <label class="field-label" for="homeTeam">Команда хозяев</label>
+              <div class="autocomplete">
+                <input id="homeTeam" placeholder="Начните вводить…" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" required>
+              </div>
+            </div>
+            <div class="field">
+              <label class="field-label" for="awayTeam">Команда гостей</label>
+              <div class="autocomplete">
+                <input id="awayTeam" placeholder="Начните вводить…" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" required>
+              </div>
+            </div>
           </div>
-  <datalist id="teamsList">
-    <option value="Виннипег Джетс">
-    <option value="Торонто Мэйпл Лифс">
-    <option value="Сиэтл Кракен">
-    <option value="Эдмонтон Ойлерз">
-    <option value="Даллас Старз">
-    <option value="Флорида Пантерз">
-    <option value="Вашингтон Кэпиталз">
-    <option value="Каролина Харрикейнз">
-    <option value="Вегас Голден Найтс">
-    <option value="Сан Хосе Шаркс">
-    <option value="Миннесота Уайлд">
-    <option value="Коламбус Блю Джекетс">
-    <option value="Оттава Сенаторз">
-    <option value="Нэшвилл Предаторз">
-    <option value="Колорадо Эвеланш">
-    <option value="Питтсбург Пингвинз">
-    <option value="Нью-Йорк Рейнджерс">
-    <option value="Калгари Флэймз">
-    <option value="Филадельфия Флайерз">
-    <option value="Лос-Анджелес Кингз">
-    <option value="Монреаль Канадиенс">
-    <option value="Баффало Сэйбрз">
-    <option value="Детройт Ред Уингз">
-    <option value="Тампа-Бэй Лайтнинг">
-    <option value="Юта Маммот">
-    <option value="Бостон Брюинз">
-    <option value="Анахайм Дакс">
-    <option value="Чикаго Блэкхокс">
-    <option value="Аризона Койотис">
-    <option value="Нью-Джерси Девилз">
-    <option value="Нью-Йорк Айлендерс">
-    <option value="Сент-Луис Блюз">
-    <option value="Ванкувер Кэнакс">
-    <option value="ЦСКА Москва">
-    <option value="СКА">
-    <option value="Трактор">
-    <option value="Драконы Шанхай">
-    <option value="Нефтехимик">
-    <option value="Северсталь Череповец">
-    <option value="Лада">
-    <option value="Автомобилист">
-    <option value="Локомотив Ярославль">
-    <option value="Авангард Омск">
-    <option value="Динамо Минск">
-    <option value="Торпедо">
-    <option value="Барыс">
-    <option value="Сибирь Новосибирск">
-    <option value="Салават Юлаев">
-    <option value="Амур">
-    <option value="Ак Барс">
-    <option value="Динамо Москва">
-    <option value="Металлург Магнитогорск">
-    <option value="Адмирал">
-    <option value="Сочи">
-    <option value="Спартак Москва">
-    <option value="Металлург Жлобин">
-    <option value="Шахтер Солигорск">
-    <option value="Локомотив Орша">
-    <option value="Брест">
-    <option value="Динамо Молодечно">
-    <option value="Гомель">
-    <option value="Витебск">
-    <option value="Лида">
-    <option value="Неман Гродно">
-    <option value="Юность Минск">
-    <option value="Авиатор Барановичи">
-    <option value="Славутич Смоленск">
-    <option value="Химик Новополоцк">
-    <option value="Могилев">
-  </datalist>
 
 
         </fieldset>
@@ -308,18 +274,12 @@
         <fieldset>
           <legend>Матч</legend>
           <div class="field-grid">
-            <label class="field" for="league">
-              <span class="field-label">Лига</span>
-              <input list="leaguesList" id="league" placeholder="Начните вводить..." autocomplete="off" required>
-            </label>
-  <datalist id="leaguesList">
-    <option value="НХЛ">
-    <option value="КХЛ">
-    <option value="Чемпионат Беларуси">
-    <option value="Чемпионат мира">
-    <option value="МХЛ">
-    <option value="ВХЛ">
-  </datalist>
+            <div class="field">
+              <label class="field-label" for="league">Лига</label>
+              <div class="autocomplete">
+                <input id="league" placeholder="Начните вводить…" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" required>
+              </div>
+            </div>
 
 
             <div class="field-grid two-columns">
@@ -474,6 +434,123 @@
       { name: 'МХЛ',                logo: 'images/Лиги/МХЛ.png',                    x: 114,  y: 50 },
       { name: 'ВХЛ',                logo: 'images/Лиги/ВХЛ.png',                    x: 121,  y: 50 }
     ];
+
+    function createAutocomplete(inputId, items) {
+      const input = document.getElementById(inputId);
+      const container = input.closest('.autocomplete');
+      const dropdown = document.createElement('div');
+      const listId = `${inputId}Options`;
+      let matches = [];
+      let activeIndex = -1;
+
+      dropdown.id = listId;
+      dropdown.className = 'autocomplete-dropdown';
+      dropdown.setAttribute('role', 'listbox');
+      dropdown.hidden = true;
+      input.setAttribute('aria-controls', listId);
+      container.appendChild(dropdown);
+
+      const close = () => {
+        dropdown.hidden = true;
+        activeIndex = -1;
+        input.setAttribute('aria-expanded', 'false');
+        input.removeAttribute('aria-activedescendant');
+      };
+
+      const setActive = index => {
+        activeIndex = index;
+        dropdown.querySelectorAll('.autocomplete-option').forEach((option, optionIndex) => {
+          const isActive = optionIndex === activeIndex;
+          option.classList.toggle('is-active', isActive);
+          option.setAttribute('aria-selected', String(isActive));
+          if (isActive) {
+            input.setAttribute('aria-activedescendant', option.id);
+            option.scrollIntoView({ block: 'nearest' });
+          }
+        });
+      };
+
+      const select = index => {
+        if (!matches[index]) return;
+        input.value = matches[index];
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+        close();
+        input.focus();
+      };
+
+      const render = () => {
+        const query = input.value.trim().toLocaleLowerCase('ru');
+        matches = items.filter(item => item.toLocaleLowerCase('ru').includes(query));
+        activeIndex = -1;
+        dropdown.replaceChildren();
+
+        if (!matches.length) {
+          const empty = document.createElement('div');
+          empty.className = 'autocomplete-empty';
+          empty.textContent = 'Ничего не найдено';
+          dropdown.appendChild(empty);
+        } else {
+          matches.forEach((item, index) => {
+            const option = document.createElement('div');
+            option.id = `${inputId}Option${index}`;
+            option.className = 'autocomplete-option';
+            option.setAttribute('role', 'option');
+            option.setAttribute('aria-selected', 'false');
+            option.textContent = item;
+            option.addEventListener('click', () => select(index));
+            dropdown.appendChild(option);
+          });
+        }
+
+        dropdown.hidden = false;
+        input.setAttribute('aria-expanded', 'true');
+        input.removeAttribute('aria-activedescendant');
+      };
+
+      input.addEventListener('focus', render);
+      input.addEventListener('click', render);
+      input.addEventListener('input', render);
+      input.addEventListener('keydown', event => {
+        if (event.key === 'Escape') {
+          close();
+          return;
+        }
+        if (event.key === 'Enter' && !dropdown.hidden && activeIndex >= 0) {
+          event.preventDefault();
+          select(activeIndex);
+          return;
+        }
+        if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
+
+        event.preventDefault();
+        if (dropdown.hidden) render();
+        if (!matches.length) return;
+        const direction = event.key === 'ArrowDown' ? 1 : -1;
+        const nextIndex = activeIndex < 0
+          ? (direction === 1 ? 0 : matches.length - 1)
+          : (activeIndex + direction + matches.length) % matches.length;
+        setActive(nextIndex);
+      });
+
+      return { container, close };
+    }
+
+    const autocompletes = [
+      createAutocomplete('homeTeam', teams.map(team => team.name)),
+      createAutocomplete('awayTeam', teams.map(team => team.name)),
+      createAutocomplete('league', leagues.map(league => league.name))
+    ];
+
+    document.addEventListener('pointerdown', event => {
+      autocompletes.forEach(autocomplete => {
+        if (!autocomplete.container.contains(event.target)) autocomplete.close();
+      });
+    });
+    document.addEventListener('focusin', event => {
+      autocompletes.forEach(autocomplete => {
+        if (!autocomplete.container.contains(event.target)) autocomplete.close();
+      });
+    });
 
     function loadImage(url, onProgress) {
       return new Promise((res, rej) => {
