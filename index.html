@@ -5,60 +5,231 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Генератор карточек матча</title>
   <style>
-    /* Oswald Font */
+    /* Typography */
     @font-face {
       font-family: 'Oswald';
       font-style: normal;
       font-weight: 500;
       src: url('Oswald/static/Oswald-Medium.ttf') format('truetype');
     }
+    :root {
+      color-scheme: light;
+      --page: #f3f6f9;
+      --surface: #ffffff;
+      --text: #132238;
+      --muted: #66758a;
+      --line: #dbe3ec;
+      --primary: #0958d9;
+      --primary-hover: #0649b8;
+      --focus: rgba(9, 88, 217, 0.18);
+      --radius-lg: 20px;
+      --radius-md: 12px;
+      --shadow: 0 16px 44px rgba(24, 43, 72, 0.08);
+    }
+
+    * { box-sizing: border-box; }
+
+    html { min-width: 320px; background: var(--page); }
+
     body {
-      font-family: 'Oswald', sans-serif;
-      max-width: 480px;
+      min-height: 100vh;
+      margin: 0;
+      background: var(--page);
+      color: var(--text);
+      font-family: 'Oswald', Arial, sans-serif;
+      font-weight: 500;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    button, input, select { font: inherit; }
+
+    .page-shell {
+      width: min(1240px, 100%);
       margin: 0 auto;
-      padding: 1rem;
+      padding: 28px 16px 48px;
     }
-    label, input, select, button {
-      display: block;
-      width: 100%;
-      margin-bottom: 0.75rem;
+
+    .page-header { margin: 0 0 24px; }
+    .eyebrow {
+      margin: 0 0 6px;
+      color: var(--primary);
+      font-size: 0.82rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
     }
-    .date-inputs {
-      display: flex;
-      gap: 0.5rem;
-    }
-    .date-inputs input,
-    .date-inputs select {
-      flex: 1;
-    }
-    .canvas-wrapper {
-      width: 100%;
-      max-width: 480px;
-      margin: 1rem auto;
+    h1 { margin: 0; font-size: clamp(1.8rem, 5vw, 2.7rem); line-height: 1.08; }
+    .intro { max-width: 620px; margin: 10px 0 0; color: var(--muted); font-family: Arial, sans-serif; line-height: 1.55; }
+
+    .workspace { display: grid; gap: 20px; align-items: start; }
+    .panel {
+      min-width: 0;
       overflow: hidden;
+      border: 1px solid rgba(209, 220, 232, 0.85);
+      border-radius: var(--radius-lg);
+      background: var(--surface);
+      box-shadow: var(--shadow);
     }
-    canvas {
-      display: block;
+    .form-panel { padding: 20px; }
+
+    fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
+    fieldset + fieldset { margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--line); }
+    legend { width: 100%; margin: 0 0 14px; padding: 0; font-size: 1.18rem; }
+    .field-grid { display: grid; gap: 14px; }
+    .field { display: grid; gap: 7px; min-width: 0; }
+    .field-label { font-size: 0.92rem; color: #35455c; }
+
+    input:not([type='checkbox']), select {
       width: 100%;
-      height: auto;
-      border: 1px solid #ccc;
-      box-sizing: border-box;
+      min-width: 0;
+      height: 48px;
+      margin: 0;
+      padding: 0 13px;
+      border: 1px solid #cbd6e2;
+      border-radius: var(--radius-md);
+      outline: 0;
+      background: #fff;
+      color: var(--text);
+      transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
     }
-    button { padding: 0.5rem; font-size: 1rem; }
-    #progress { text-align: center; margin-top: 0.5rem; font-weight: bold; }
-    a#downloadLink { display: none; text-align: center; margin-top: 1rem; }
+    input::placeholder { color: #8a98aa; }
+    input:hover, select:hover { border-color: #9aabc0; }
+    input:focus-visible, select:focus-visible { border-color: var(--primary); box-shadow: 0 0 0 4px var(--focus); }
+    .date-inputs { display: grid; grid-template-columns: minmax(88px, 0.72fr) minmax(0, 1.55fr); gap: 10px; }
+
+    .switch-list { display: grid; gap: 10px; }
+    .switch-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      min-height: 52px;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+    }
+    .switch-row:hover { background: #f8fafc; }
+    .switch-row input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+    .switch {
+      position: relative;
+      flex: 0 0 auto;
+      width: 46px;
+      height: 26px;
+      border-radius: 999px;
+      background: #aebac8;
+      transition: background 160ms ease, box-shadow 160ms ease;
+    }
+    .switch::after {
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: 0 2px 5px rgba(0,0,0,.2);
+      content: '';
+      transition: transform 160ms ease;
+    }
+    .switch-row input:checked + .switch { background: var(--primary); }
+    .switch-row input:checked + .switch::after { transform: translateX(20px); }
+    .switch-row input:focus-visible + .switch { box-shadow: 0 0 0 4px var(--focus); }
+
+    .generate-button, .download-button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      min-height: 52px;
+      margin: 22px 0 0;
+      padding: 12px 18px;
+      border: 0;
+      border-radius: var(--radius-md);
+      background: var(--primary);
+      color: #fff;
+      font-size: 1.06rem;
+      text-align: center;
+      text-decoration: none;
+      cursor: pointer;
+      box-shadow: 0 8px 20px rgba(9, 88, 217, .22);
+      transition: background 160ms ease, transform 120ms ease, box-shadow 160ms ease;
+    }
+    .generate-button:hover, .download-button:hover { background: var(--primary-hover); box-shadow: 0 10px 24px rgba(9, 88, 217, .28); }
+    .generate-button:active, .download-button:active { transform: translateY(1px); }
+    .generate-button:focus-visible, .download-button:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+    .generate-button:disabled { background: #8492a5; box-shadow: none; cursor: wait; }
+
+    .status { display: none; align-items: center; gap: 10px; margin-top: 14px; color: var(--muted); font-family: Arial, sans-serif; font-size: .88rem; }
+    .status.is-visible { display: flex; }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--primary); box-shadow: 0 0 0 5px var(--focus); }
+    .status.is-loading .status-dot { animation: pulse 1s ease-in-out infinite; }
+    @keyframes pulse { 50% { opacity: .35; transform: scale(.75); } }
+
+    .result-panel { padding: 16px; }
+    .result-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: 2px 2px 14px; }
+    .result-heading h2 { margin: 0; font-size: 1.2rem; }
+    .result-heading span { color: var(--muted); font-family: Arial, sans-serif; font-size: .78rem; }
+    .preview-stage {
+      display: grid;
+      place-items: center;
+      width: 100%;
+      aspect-ratio: 1;
+      overflow: hidden;
+      border: 1px dashed #c4d0dc;
+      border-radius: 15px;
+      background: #f7f9fc;
+    }
+    .placeholder { max-width: 280px; padding: 24px; color: var(--muted); text-align: center; font-family: Arial, sans-serif; line-height: 1.45; }
+    .placeholder-icon { display: grid; place-items: center; width: 54px; height: 54px; margin: 0 auto 14px; border-radius: 50%; background: #e8eef6; color: var(--primary); font-size: 1.5rem; }
+    #resultImage { display: none; width: 100%; max-width: 100%; height: auto; -webkit-touch-callout: default; user-select: auto; -webkit-user-select: auto; }
+    .preview-stage.has-result { display: block; border: 0; background: transparent; }
+    .preview-stage.has-result .placeholder { display: none; }
+    .preview-stage.has-result #resultImage { display: block; }
+    #preview { display: none; }
+    .download-button { display: none; margin-top: 14px; }
+    .download-button.is-visible { display: flex; }
+    .touch-hint { display: none; margin: 10px 4px 0; color: var(--muted); font-family: Arial, sans-serif; font-size: .82rem; text-align: center; }
+
+    @media (hover: none) and (pointer: coarse) { .touch-hint.is-visible { display: block; } }
+    @media (min-width: 620px) {
+      .page-shell { padding: 42px 24px 64px; }
+      .form-panel { padding: 26px; }
+      .field-grid.two-columns { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (min-width: 960px) {
+      .workspace { grid-template-columns: minmax(430px, .82fr) minmax(460px, 1.18fr); gap: 28px; }
+      .result-panel { position: sticky; top: 24px; padding: 20px; }
+    }
+    @media (max-width: 359px) {
+      .page-shell { padding-inline: 10px; }
+      .form-panel, .result-panel { padding: 14px; }
+      .date-inputs { grid-template-columns: 84px minmax(0, 1fr); gap: 8px; }
+    }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; animation: none !important; } }
   </style>
 </head>
 <body>
-  <h1>Генератор карточек матча</h1>
+  <main class="page-shell">
+    <header class="page-header">
+      <p class="eyebrow">Hockey Plus · Match Cards</p>
+      <h1>Генератор карточек матча</h1>
+      <p class="intro">Выберите команды и параметры встречи — сервис подготовит готовую карточку в высоком разрешении.</p>
+    </header>
 
-  <!-- Форма выбора -->
-  <label>Команда хозяев:
-    <input list="teamsList" id="homeTeam" placeholder="Начните вводить...">
-  </label>
-  <label>Команда гостей:
-    <input list="teamsList" id="awayTeam" placeholder="Начните вводить...">
-  </label>
+    <div class="workspace">
+      <form class="panel form-panel" id="cardForm">
+        <fieldset>
+          <legend>Команды</legend>
+          <div class="field-grid two-columns">
+            <label class="field" for="homeTeam">
+              <span class="field-label">Команда хозяев</span>
+              <input list="teamsList" id="homeTeam" placeholder="Начните вводить..." autocomplete="off" required>
+            </label>
+            <label class="field" for="awayTeam">
+              <span class="field-label">Команда гостей</span>
+              <input list="teamsList" id="awayTeam" placeholder="Начните вводить..." autocomplete="off" required>
+            </label>
+          </div>
   <datalist id="teamsList">
     <option value="Виннипег Джетс">
     <option value="Торонто Мэйпл Лифс">
@@ -131,9 +302,16 @@
     <option value="Могилев">
   </datalist>
 
-  <label>Лига:
-    <input list="leaguesList" id="league" placeholder="Начните вводить...">
-  </label>
+
+        </fieldset>
+
+        <fieldset>
+          <legend>Матч</legend>
+          <div class="field-grid">
+            <label class="field" for="league">
+              <span class="field-label">Лига</span>
+              <input list="leaguesList" id="league" placeholder="Начните вводить..." autocomplete="off" required>
+            </label>
   <datalist id="leaguesList">
     <option value="НХЛ">
     <option value="КХЛ">
@@ -143,38 +321,72 @@
     <option value="ВХЛ">
   </datalist>
 
-  <label>Дата матча:</label>
-  <div class="date-inputs">
-    <input type="number" id="matchDay" min="1" max="31" placeholder="День">
-    <select id="matchMonth">
-      <option value="0">ЯНВАРЯ</option>
-      <option value="1">ФЕВРАЛЯ</option>
-      <option value="2">МАРТА</option>
-      <option value="3">АПРЕЛЯ</option>
-      <option value="4">МАЯ</option>
-      <option value="5">ИЮНЯ</option>
-      <option value="6">ИЮЛЯ</option>
-      <option value="7">АВГУСТА</option>
-      <option value="8">СЕНТЯБРЯ</option>
-      <option value="9">ОКТЯБРЯ</option>
-      <option value="10">НОЯБРЯ</option>
-      <option value="11">ДЕКАБРЯ</option>
-    </select>
-  </div>
 
-  <label for="matchTime">Время матча:</label>
-  <input type="time" id="matchTime">
+            <div class="field-grid two-columns">
+              <div class="field">
+                <span class="field-label" id="dateLabel">Дата матча</span>
+                <div class="date-inputs" aria-labelledby="dateLabel">
+                  <input type="number" id="matchDay" min="1" max="31" placeholder="День" aria-label="День" inputmode="numeric" required>
+                  <select id="matchMonth" aria-label="Месяц">
+                    <option value="0">ЯНВАРЯ</option><option value="1">ФЕВРАЛЯ</option>
+                    <option value="2">МАРТА</option><option value="3">АПРЕЛЯ</option>
+                    <option value="4">МАЯ</option><option value="5">ИЮНЯ</option>
+                    <option value="6">ИЮЛЯ</option><option value="7">АВГУСТА</option>
+                    <option value="8">СЕНТЯБРЯ</option><option value="9">ОКТЯБРЯ</option>
+                    <option value="10">НОЯБРЯ</option><option value="11">ДЕКАБРЯ</option>
+                  </select>
+                </div>
+              </div>
+              <label class="field" for="matchTime">
+                <span class="field-label">Время матча</span>
+                <input type="time" id="matchTime" required>
+              </label>
+            </div>
+          </div>
+        </fieldset>
 
-  <label><input type="checkbox" id="addLogoHp" checked> Добавить логотип Hockey Plus</label>
-  <label><input type="checkbox" id="showVS" checked> Показать "VS"</label>
+        <fieldset>
+          <legend>Настройки</legend>
+          <div class="switch-list">
+            <label class="switch-row">
+              <span>Добавить логотип Hockey Plus</span>
+              <input type="checkbox" id="addLogoHp" checked>
+              <span class="switch" aria-hidden="true"></span>
+            </label>
+            <label class="switch-row">
+              <span>Показать «VS»</span>
+              <input type="checkbox" id="showVS" checked>
+              <span class="switch" aria-hidden="true"></span>
+            </label>
+          </div>
+        </fieldset>
 
-  <button id="generate">Сгенерировать карточку</button>
-  <div id="progress"></div>
-  <a id="downloadLink">Скачать PNG</a>
+        <button class="generate-button" id="generate" type="submit">Сгенерировать карточку</button>
+        <div class="status" id="progress" role="status" aria-live="polite">
+          <span class="status-dot" aria-hidden="true"></span>
+          <span id="progressText"></span>
+        </div>
+      </form>
 
-  <div class="canvas-wrapper">
-    <canvas id="preview" width="2000" height="2000"></canvas>
-  </div>
+      <section class="panel result-panel" aria-labelledby="resultTitle">
+        <div class="result-heading">
+          <h2 id="resultTitle">Готовая карточка</h2>
+          <span>PNG · 2000 × 2000</span>
+        </div>
+        <div class="preview-stage" id="previewStage">
+          <div class="placeholder">
+            <div class="placeholder-icon" aria-hidden="true">◇</div>
+            <strong>Здесь появится готовая карточка</strong><br>
+            Заполните форму и нажмите кнопку генерации.
+          </div>
+          <img id="resultImage" alt="Готовая карточка матча">
+        </div>
+        <a class="download-button" id="downloadLink" download>Скачать PNG</a>
+        <p class="touch-hint" id="touchHint">Зажмите изображение, чтобы сохранить его</p>
+        <canvas id="preview" width="2000" height="2000" aria-hidden="true"></canvas>
+      </section>
+    </div>
+  </main>
 
   <script>
     // ===== Настройки =====
@@ -275,9 +487,20 @@
 
     async function drawCard() {
       const prog = document.getElementById('progress');
-      prog.textContent = '';
+      const progText = document.getElementById('progressText');
+      const generateButton = document.getElementById('generate');
+      const setStatus = (message, loading = false) => {
+        progText.textContent = message;
+        prog.classList.add('is-visible');
+        prog.classList.toggle('is-loading', loading);
+      };
 
-      await document.fonts.load('500 10px Oswald');
+      setStatus('Подготовка…', true);
+      generateButton.disabled = true;
+      generateButton.textContent = 'Создаём карточку…';
+
+      try {
+        await document.fonts.load('500 10px Oswald');
 
       const h  = document.getElementById('homeTeam').value;
       const a  = document.getElementById('awayTeam').value;
@@ -287,21 +510,32 @@
       const t  = document.getElementById('matchTime').value;
       const hp = document.getElementById('addLogoHp').checked;
       const vs = document.getElementById('showVS').checked;
-      if (!h||!a||!l||!d||m===''||!t) return alert('Заполните все поля');
+        if (!h || !a || !l || !d || m === '' || !t) {
+          setStatus('Заполните все поля формы.');
+          return;
+        }
+
+        const homeTeam = teams.find(x => x.name === h);
+        const awayTeam = teams.find(x => x.name === a);
+        const selectedLeague = leagues.find(x => x.name === l);
+        if (!homeTeam || !awayTeam || !selectedLeague) {
+          setStatus('Выберите команды и лигу из предложенного списка.');
+          return;
+        }
 
       // URL-ы картинок
       const urls = [
         'images/Фон/Фон.png',
-        teams.find(x=>x.name===h).logo,
-        teams.find(x=>x.name===a).logo,
-        leagues.find(x=>x.name===l).logo
+        homeTeam.logo,
+        awayTeam.logo,
+        selectedLeague.logo
       ];
       if (hp) urls.push('images/Hockey Plus/Лого.png');
 
       let loaded = 0, total = urls.length;
       const onProg = () => {
         loaded++;
-        prog.textContent = `Готовность: ${Math.round(loaded/total*100)}%`;
+        setStatus(`Загрузка изображений: ${Math.round(loaded/total*100)}%`, true);
       };
 
       // Загружаем все
@@ -320,7 +554,7 @@
       ctx.drawImage(imgA, 1500  - imgA.width/2, logoCenterY - imgA.height/2);
 
       // Лига
-      const ligObj = leagues.find(x=>x.name===l);
+      const ligObj = selectedLeague;
       ctx.drawImage(imgL, ligObj.x, ligObj.y);
 
       // HP
@@ -354,14 +588,30 @@
       ctx.fillText(t, canvas.width/2, dateY + lineHeight + 1);
 
       // Завершение
-      prog.textContent = '100% — готово!';
+      const pngData = canvas.toDataURL('image/png');
+      const resultImage = document.getElementById('resultImage');
       const link = document.getElementById('downloadLink');
-      link.href     = canvas.toDataURL('image/png');
+      resultImage.src = pngData;
+      resultImage.alt = `Карточка матча: ${h} — ${a}`;
+      link.href     = pngData;
       link.download = `${h}_vs_${a}.png`;
-      link.style.display = 'block';
+      document.getElementById('previewStage').classList.add('has-result');
+      document.getElementById('touchHint').classList.add('is-visible');
+      link.classList.add('is-visible');
+      setStatus('Карточка готова.');
+      } catch (error) {
+        console.error(error);
+        setStatus('Не удалось создать карточку. Проверьте соединение и попробуйте ещё раз.');
+      } finally {
+        generateButton.disabled = false;
+        generateButton.textContent = 'Сгенерировать карточку';
+      }
     }
 
-    document.getElementById('generate').addEventListener('click', drawCard);
+    document.getElementById('cardForm').addEventListener('submit', event => {
+      event.preventDefault();
+      drawCard();
+    });
   </script>
 </body>
 </html>
